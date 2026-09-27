@@ -1,4 +1,4 @@
-package com.example.yourappname.ui
+package com.example.worder.ui.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -7,8 +7,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.worder.ui.NameInputScreen
-import com.example.worder.ui.WelcomeScreen
+import com.example.worder.ui.compose.ProfileInputScreen
+import com.example.worder.ui.compose.WelcomeScreen
 import com.example.worder.viewmodel.UserViewModel
 
 // Имена маршрутов — как строковые константы
@@ -21,19 +21,22 @@ fun AppNavigation() {
     val viewModel: UserViewModel = viewModel()  // получаем ViewModel, привязанную к текущему хосту
 
     // collectAsState — подписываемся на StateFlow и превращаем в Compose-state
-    val userName by viewModel.userName.collectAsState()
+    val profile by viewModel.userProfile.collectAsState()
 
     NavHost(navController = navController, startDestination = ROUTE_WELCOME) {
         composable(ROUTE_WELCOME) {
             WelcomeScreen(
-                userName = userName,
-                onEnterNameClick = { navController.navigate(ROUTE_NAME_INPUT) }
+                userName = profile?.name,
+                userGender = profile?.gender,
+                onEditProfileClick = { navController.navigate(ROUTE_NAME_INPUT) }
             )
         }
         composable(ROUTE_NAME_INPUT) {
-            NameInputScreen(
-                onSave = { name ->
-                    viewModel.saveName(name)
+            ProfileInputScreen(
+                initName = profile?.name,
+                initGender = profile?.gender,
+                onSave = { name, gender ->
+                    viewModel.saveProfile(name, gender)
                     navController.popBackStack()  // вернуться назад (на Welcome)
                 }
             )
