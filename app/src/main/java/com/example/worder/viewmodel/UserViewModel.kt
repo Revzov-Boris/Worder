@@ -28,4 +28,10 @@ class UserViewModel(app: Application) : AndroidViewModel(app) {
             prefs.saveProfile(name.trim(), gender)
         }
     }
+
+    fun logOut() {
+        viewModelScope.launch {
+            prefs.clearProfile()
+        }
+    }
 }

@@ -37,4 +37,11 @@ class UserPreferences(private val context: Context) {
             prefs[GENDER_KEY] = gender.name;
         }
     }
+
+    suspend fun clearProfile() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(NAME_KEY)
+            prefs.remove(GENDER_KEY)
+        }
+    }
 }

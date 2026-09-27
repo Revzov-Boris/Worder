@@ -1,6 +1,9 @@
 package com.example.worder.ui.compose
 
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -14,7 +17,8 @@ import com.example.worder.data.Gender
 fun WelcomeScreen(
     userName: String?,
     userGender: Gender?,
-    onEditProfileClick: () -> Unit
+    onEditProfileClick: () -> Unit,
+    onSettingsClick: () -> Unit
 ) {
     // Column — вертикальный контейнер (LinearLayout orientation=vertical)
     // Modifier — цепочка настроек: размер, отступы, выравнивание (аналог LayoutParams)
@@ -31,20 +35,35 @@ fun WelcomeScreen(
         "Войти"
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = helloString,
-            style = MaterialTheme.typography.headlineSmall
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = onEditProfileClick) {
-            Text(buttonText)
+    Box(modifier = Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.safeDrawing)) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = helloString,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(onClick = onEditProfileClick) {
+                Text(buttonText)
+            }
+        }
+
+        IconButton(
+            onClick = {
+                android.util.Log.d("WELCOME", "settings clicked")
+                onSettingsClick()
+            },
+            modifier = Modifier.align(Alignment.TopEnd)
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Settings,
+                "Настройки",
+            )
         }
     }
 }

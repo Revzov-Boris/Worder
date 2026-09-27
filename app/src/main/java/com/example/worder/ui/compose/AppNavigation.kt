@@ -14,6 +14,8 @@ import com.example.worder.viewmodel.UserViewModel
 // Имена маршрутов — как строковые константы
 private const val ROUTE_WELCOME = "welcome"
 private const val ROUTE_NAME_INPUT = "name_input"
+private const val ROUTE_SETTINGS = "settings"
+
 
 @Composable
 fun AppNavigation() {
@@ -28,7 +30,8 @@ fun AppNavigation() {
             WelcomeScreen(
                 userName = profile?.name,
                 userGender = profile?.gender,
-                onEditProfileClick = { navController.navigate(ROUTE_NAME_INPUT) }
+                onEditProfileClick = { navController.navigate(ROUTE_NAME_INPUT) },
+                onSettingsClick = { navController.navigate(ROUTE_SETTINGS) }
             )
         }
         composable(ROUTE_NAME_INPUT) {
@@ -39,6 +42,15 @@ fun AppNavigation() {
                     viewModel.saveProfile(name, gender)
                     navController.popBackStack()  // вернуться назад (на Welcome)
                 }
+            )
+        }
+        composable(ROUTE_SETTINGS) {
+            SettingsScreen(
+                onLogOutClick = {
+                    viewModel.logOut()
+                    navController.popBackStack()   // возвращаемся на Welcome
+                },
+                onCloseClick = { navController.popBackStack() }
             )
         }
     }
