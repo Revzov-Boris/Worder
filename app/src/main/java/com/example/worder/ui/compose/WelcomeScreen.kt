@@ -18,7 +18,8 @@ fun WelcomeScreen(
     userName: String?,
     userGender: Gender?,
     onEditProfileClick: () -> Unit,
-    onSettingsClick: () -> Unit
+    onSettingsClick: () -> Unit,
+    onNextClick: () -> Unit
 ) {
     // Column — вертикальный контейнер (LinearLayout orientation=vertical)
     // Modifier — цепочка настроек: размер, отступы, выравнивание (аналог LayoutParams)
@@ -51,6 +52,8 @@ fun WelcomeScreen(
             Button(onClick = onEditProfileClick) {
                 Text(buttonText)
             }
+
+            OutlinedButton(onClick = onNextClick) { Text("Далее") }
         }
 
         IconButton(

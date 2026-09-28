@@ -15,6 +15,7 @@ import com.example.worder.viewmodel.UserViewModel
 private const val ROUTE_WELCOME = "welcome"
 private const val ROUTE_NAME_INPUT = "name_input"
 private const val ROUTE_SETTINGS = "settings"
+private const val ROUTE_CONTENT = "content"
 
 
 @Composable
@@ -31,7 +32,8 @@ fun AppNavigation() {
                 userName = profile?.name,
                 userGender = profile?.gender,
                 onEditProfileClick = { navController.navigate(ROUTE_NAME_INPUT) },
-                onSettingsClick = { navController.navigate(ROUTE_SETTINGS) }
+                onSettingsClick = { navController.navigate(ROUTE_SETTINGS) },
+                onNextClick = {navController.navigate(ROUTE_CONTENT) }
             )
         }
         composable(ROUTE_NAME_INPUT) {
@@ -51,6 +53,11 @@ fun AppNavigation() {
                     navController.popBackStack()   // возвращаемся на Welcome
                 },
                 onCloseClick = { navController.popBackStack() }
+            )
+        }
+        composable(ROUTE_CONTENT) {
+            ContentScreen(
+                onSettingsClick = { navController.navigate(ROUTE_CONTENT) }
             )
         }
     }
