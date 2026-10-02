@@ -21,8 +21,6 @@ fun WelcomeScreen(
     onSettingsClick: () -> Unit,
     onNextClick: () -> Unit
 ) {
-    // Column — вертикальный контейнер (LinearLayout orientation=vertical)
-    // Modifier — цепочка настроек: размер, отступы, выравнивание (аналог LayoutParams)
 
     val helloString = if (!userName.isNullOrBlank() && userGender != null) {
         "Привет, ${userGender.label} $userName"

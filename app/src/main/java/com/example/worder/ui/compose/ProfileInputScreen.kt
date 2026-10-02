@@ -17,8 +17,7 @@ fun ProfileInputScreen(
     initName: String?,
     onSave: (String, Gender) -> Unit
 ) {
-    // remember с ключами: если initialName изменится, пересоздаст состояние.
-    // Это позволяет предзаполнить поле текущим именем.
+
     var name by remember(initName) { mutableStateOf(initName.orEmpty()) }
     var selectedGender by remember(initGender) { mutableStateOf(initGender) }
 
@@ -35,7 +34,7 @@ fun ProfileInputScreen(
         )
         Spacer(modifier = Modifier.height(24.dp))
 
-        // --- Выбор пола ---
+        // Выбор пола
         Text(
             text = "Пол",
             style = MaterialTheme.typography.labelLarge,
@@ -46,7 +45,7 @@ fun ProfileInputScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .selectableGroup(),   // для доступности (TalkBack)
+                .selectableGroup(),   // только один можно выбрать
             verticalAlignment = Alignment.CenterVertically
         ) {
             Gender.entries.forEach { gender ->
@@ -62,7 +61,7 @@ fun ProfileInputScreen(
                 ) {
                     RadioButton(
                         selected = (selectedGender == gender),
-                        onClick = null  // клик обрабатывается на родителе через selectable
+                        onClick = null
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(gender.label)
@@ -72,7 +71,7 @@ fun ProfileInputScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // --- Ввод имени ---
+        // Ввод имени
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },

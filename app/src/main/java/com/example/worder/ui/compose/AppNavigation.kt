@@ -11,7 +11,7 @@ import com.example.worder.ui.compose.ProfileInputScreen
 import com.example.worder.ui.compose.WelcomeScreen
 import com.example.worder.viewmodel.UserViewModel
 
-// Имена маршрутов — как строковые константы
+// Имена маршрутов
 private const val ROUTE_WELCOME = "welcome"
 private const val ROUTE_NAME_INPUT = "name_input"
 private const val ROUTE_SETTINGS = "settings"
