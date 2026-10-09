@@ -1,6 +1,8 @@
 package com.example.worder.service
 
 import com.example.worder.data.LanguageDto
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -62,13 +64,13 @@ object ApiClient {
             .create(LanguageApi::class.java)
     }
 
-    // Захардкоженный JSON для тестов
-//    private val fakeApi: LanguageApi = object : LanguageApi {
-//        override suspend fun getLanguages(): List<LanguageDto> {
-//            val type = object : TypeToken<List<LanguageDto>>() {}.type
-//            return Gson().fromJson(JSON, type)
-//        }
-//    }
+   //  Захардкоженный JSON для тестов
+    private val fakeApi: LanguageApi = object : LanguageApi {
+        override suspend fun getLanguages(): List<LanguageDto> {
+            val type = object : TypeToken<List<LanguageDto>>() {}.type
+            return Gson().fromJson(JSON, type)
+        }
+    }
 
-    val languageApi: LanguageApi get() = reaLlanguageApi
+    val languageApi: LanguageApi get() = fakeApi;
 }

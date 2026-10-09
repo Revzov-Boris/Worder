@@ -57,7 +57,7 @@ fun AppNavigation() {
         }
         composable(ROUTE_CONTENT) {
             ContentScreen(
-                onSettingsClick = { navController.navigate(ROUTE_CONTENT) }
+                onSettingsClick = { navController.navigate(ROUTE_SETTINGS) }
             )
         }
     }

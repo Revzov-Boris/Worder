@@ -84,7 +84,10 @@ fun ProfileInputScreen(
 
         // Кнопка активна, только когда оба поля заполнены
         Button(
-            onClick = { selectedGender?.let { onSave(name, it) } },
+            onClick = {
+                android.util.Log.d("PROFILE", "input data")
+                selectedGender?.let { onSave(name, it) }
+            },
             enabled = selectedGender != null && name.isNotBlank(),
             modifier = Modifier.fillMaxWidth()
         ) {

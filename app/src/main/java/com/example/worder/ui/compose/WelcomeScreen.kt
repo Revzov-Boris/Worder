@@ -51,20 +51,11 @@ fun WelcomeScreen(
                 Text(buttonText)
             }
 
-            OutlinedButton(onClick = onNextClick) { Text("Далее") }
+            OutlinedButton(onClick = {
+                android.util.Log.d("WELLCOME", "to profile")
+                onNextClick()
+            }) { Text("Далее") }
         }
 
-        IconButton(
-            onClick = {
-                android.util.Log.d("WELCOME", "settings clicked")
-                onSettingsClick()
-            },
-            modifier = Modifier.align(Alignment.TopEnd)
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Settings,
-                "Настройки",
-            )
-        }
     }
 }
