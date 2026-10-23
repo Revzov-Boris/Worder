@@ -18,6 +18,7 @@ fun ProfileInputScreen(
     onSave: (String, Gender) -> Unit
 ) {
 
+    // TODO логирование жизненного цикла ВСЕХ экранов (не активити)
     var name by remember(initName) { mutableStateOf(initName.orEmpty()) }
     var selectedGender by remember(initGender) { mutableStateOf(initGender) }
 

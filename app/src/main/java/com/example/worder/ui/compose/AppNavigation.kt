@@ -1,9 +1,12 @@
 package com.example.worder.ui.compose
 
+import android.util.Log
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -26,8 +29,20 @@ fun AppNavigation() {
     // collectAsState — подписываемся на StateFlow и превращаем в Compose-state
     val profile by viewModel.userProfile.collectAsState()
 
+    DisposableEffect(navController) {
+        val listener = NavController.OnDestinationChangedListener { _, destination, _ ->
+            Log.d("Screen_LIFE_CYCLE", "Enter: ${destination.route}")
+        }
+        navController.addOnDestinationChangedListener(listener)
+
+        onDispose {
+            navController.removeOnDestinationChangedListener(listener)
+        }
+    }
+
     NavHost(navController = navController, startDestination = ROUTE_WELCOME) {
         composable(ROUTE_WELCOME) {
+            ScreenLifecycleLogger("WelcomeScreen")
             WelcomeScreen(
                 userName = profile?.name,
                 userGender = profile?.gender,
@@ -37,6 +52,7 @@ fun AppNavigation() {
             )
         }
         composable(ROUTE_NAME_INPUT) {
+            ScreenLifecycleLogger("ProfileInputScreen")
             ProfileInputScreen(
                 initName = profile?.name,
                 initGender = profile?.gender,
@@ -47,6 +63,7 @@ fun AppNavigation() {
             )
         }
         composable(ROUTE_SETTINGS) {
+            ScreenLifecycleLogger("SettingsScreen")
             SettingsScreen(
                 onLogOutClick = {
                     viewModel.logOut()
@@ -56,9 +73,20 @@ fun AppNavigation() {
             )
         }
         composable(ROUTE_CONTENT) {
+            ScreenLifecycleLogger("ContentScreen")
             ContentScreen(
                 onSettingsClick = { navController.navigate(ROUTE_SETTINGS) }
             )
+        }
+    }
+}
+
+@Composable
+private fun ScreenLifecycleLogger(screenName: String) {
+    DisposableEffect(screenName) {
+        Log.d("Screen_LIFE_CYCLE", "$screenName: onEnter")
+        onDispose {
+            Log.d("Screen_LIFE_CYCLE", "$screenName: onExit")
         }
     }
 }

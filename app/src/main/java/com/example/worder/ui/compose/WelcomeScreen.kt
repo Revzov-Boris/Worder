@@ -1,5 +1,6 @@
 package com.example.worder.ui.compose
 
+import android.util.Log
 import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,6 +10,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.example.worder.data.Gender
 
 // @Composable — это «функция, рисующая UI». Аналог метода onCreate/вёрстки XML,
@@ -19,7 +22,7 @@ fun WelcomeScreen(
     userGender: Gender?,
     onEditProfileClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    onNextClick: () -> Unit
+    onNextClick: () -> Unit,
 ) {
 
     val helloString = if (!userName.isNullOrBlank() && userGender != null) {
