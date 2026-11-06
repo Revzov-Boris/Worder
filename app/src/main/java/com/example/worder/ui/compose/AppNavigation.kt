@@ -10,8 +10,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.worder.ui.compose.ProfileInputScreen
-import com.example.worder.ui.compose.WelcomeScreen
 import com.example.worder.viewmodel.UserViewModel
 
 // Имена маршрутов
@@ -41,8 +39,8 @@ fun AppNavigation() {
     }
 
     NavHost(navController = navController, startDestination = ROUTE_WELCOME) {
-        composable(ROUTE_WELCOME) {
-            ScreenLifecycleLogger("WelcomeScreen")
+        composable(ROUTE_WELCOME) { backStackEntry ->
+            ScreenLifecycleLogger("WelcomeScreen", backStackEntry)
             WelcomeScreen(
                 userName = profile?.name,
                 userGender = profile?.gender,
@@ -51,8 +49,8 @@ fun AppNavigation() {
                 onNextClick = {navController.navigate(ROUTE_CONTENT) }
             )
         }
-        composable(ROUTE_NAME_INPUT) {
-            ScreenLifecycleLogger("ProfileInputScreen")
+        composable(ROUTE_NAME_INPUT) { backStackEntry ->
+            ScreenLifecycleLogger("ProfileInputScreen",  backStackEntry)
             ProfileInputScreen(
                 initName = profile?.name,
                 initGender = profile?.gender,
@@ -62,8 +60,8 @@ fun AppNavigation() {
                 }
             )
         }
-        composable(ROUTE_SETTINGS) {
-            ScreenLifecycleLogger("SettingsScreen")
+        composable(ROUTE_SETTINGS) {  backStackEntry ->
+            ScreenLifecycleLogger("SettingsScreen",  backStackEntry)
             SettingsScreen(
                 onLogOutClick = {
                     viewModel.logOut()
@@ -72,21 +70,11 @@ fun AppNavigation() {
                 onCloseClick = { navController.popBackStack() }
             )
         }
-        composable(ROUTE_CONTENT) {
-            ScreenLifecycleLogger("ContentScreen")
+        composable(ROUTE_CONTENT) {  backStackEntry ->
+            ScreenLifecycleLogger("ContentScreen",  backStackEntry)
             ContentScreen(
                 onSettingsClick = { navController.navigate(ROUTE_SETTINGS) }
             )
-        }
-    }
-}
-
-@Composable
-private fun ScreenLifecycleLogger(screenName: String) {
-    DisposableEffect(screenName) {
-        Log.d("Screen_LIFE_CYCLE", "$screenName: onEnter")
-        onDispose {
-            Log.d("Screen_LIFE_CYCLE", "$screenName: onExit")
         }
     }
 }
