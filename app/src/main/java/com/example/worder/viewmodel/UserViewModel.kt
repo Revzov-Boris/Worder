@@ -6,29 +6,23 @@ import androidx.lifecycle.viewModelScope
 import com.example.worder.data.Gender
 import com.example.worder.data.UserPreferences
 import com.example.worder.data.UserProfile
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class UserViewModel(app: Application) : AndroidViewModel(app) {
 
-    private val prefs = UserPreferences(app)
-
-    val userProfile = prefs.userProfile.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = UserProfile(null, null)
-    )
+    private val _userProfile = MutableStateFlow<UserProfile?>(null)
+    val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
 
     fun saveProfile(name: String, gender: Gender) {
-        viewModelScope.launch {   // launch — запуск корутины
-            prefs.saveProfile(name.trim(), gender)
-        }
+        _userProfile.value = UserProfile(gender, name.trim())
     }
 
     fun logOut() {
-        viewModelScope.launch {
-            prefs.clearProfile()
-        }
+        _userProfile.value = null
     }
 }

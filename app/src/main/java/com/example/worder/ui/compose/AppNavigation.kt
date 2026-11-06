@@ -22,7 +22,7 @@ private const val ROUTE_CONTENT = "content"
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val viewModel: UserViewModel = viewModel()  // получаем ViewModel, привязанную к текущему хосту
+    val viewModel: UserViewModel = viewModel()
 
     // collectAsState — подписываемся на StateFlow и превращаем в Compose-state
     val profile by viewModel.userProfile.collectAsState()

@@ -12,6 +12,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -29,7 +30,25 @@ fun ContentScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Scaffold() { innerPadding ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Языки") },
+                actions = {
+                    IconButton(onClick = {
+                        android.util.Log.d("CONTENT", "settings clicked")
+                        onSettingsClick()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Настройки"
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        // innerPadding здесь уже учитывает высоту уменьшенного TopAppBar
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -57,7 +76,7 @@ fun ContentScreen(
                     } else {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(16.dp),
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             items(s.languages, key = { it.id }) { lang ->
@@ -67,22 +86,9 @@ fun ContentScreen(
                     }
                 }
             }
-            IconButton(
-                onClick = {
-                    android.util.Log.d("CONTENT", "settings clicked")
-                    onSettingsClick()
-                },
-                modifier = Modifier.align(Alignment.TopEnd)
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    "Настройки",
-                )
-            }
         }
     }
 }
-
 @Composable
 private fun LanguageCard(language: LanguageDto) {
     Card(
