@@ -48,7 +48,6 @@ fun ContentScreen(
             )
         }
     ) { innerPadding ->
-        // innerPadding здесь уже учитывает высоту уменьшенного TopAppBar
         Box(
             modifier = Modifier
                 .fillMaxSize()
