@@ -1,6 +1,6 @@
 package com.example.worder.ui.compose
 
-import android.util.Log
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -9,36 +9,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.worder.data.LanguageDto
-import com.example.worder.viewmodel.LanguagesUiState
-import com.example.worder.viewmodel.LanguagesViewModel
+import com.example.worder.data.CategoryDto
+import com.example.worder.viewmodel.CategoriesUiState
+import com.example.worder.viewmodel.CategoriesViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ContentScreen(
     onSettingsClick: () -> Unit,
-    viewModel: LanguagesViewModel = viewModel()
+    viewModel: CategoriesViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Языки") },
+                title = { Text("Категории слов") },
                 actions = {
-                    IconButton(onClick = {
-                        android.util.Log.d("CONTENT", "settings clicked")
-                        onSettingsClick()
-                    }) {
+                    IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
                             contentDescription = "Настройки"
@@ -54,10 +50,11 @@ fun ContentScreen(
                 .padding(innerPadding)
         ) {
             when (val s = state) {
-                is LanguagesUiState.Loading -> {
+                is CategoriesUiState.Loading -> {
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
-                is LanguagesUiState.Error -> {
+
+                is CategoriesUiState.Error -> {
                     Column(
                         modifier = Modifier
                             .align(Alignment.Center)
@@ -66,11 +63,12 @@ fun ContentScreen(
                     ) {
                         Text("Ошибка: ${s.message}")
                         Spacer(Modifier.height(16.dp))
-                        Button(onClick = { viewModel.load() }) { Text("Повторить") }
+                        Button(onClick = { viewModel.loadFirstPage() }) { Text("Повторить") }
                     }
                 }
-                is LanguagesUiState.Success -> {
-                    if (s.languages.isEmpty()) {
+
+                is CategoriesUiState.Success -> {
+                    if (s.categories.isEmpty()) {
                         Text("Нет данных", modifier = Modifier.align(Alignment.Center))
                     } else {
                         LazyColumn(
@@ -78,8 +76,29 @@ fun ContentScreen(
                             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            items(s.languages, key = { it.id }) { lang ->
-                                LanguageCard(lang)
+                            items(s.categories, key = { it.id }) { category ->
+                                CategoryCard(category)
+                            }
+
+                            // Кнопка «Больше» — показываем только если есть ещё страницы
+                            if (s.hasMore) {
+                                item(key = "load_more") {
+                                    Box(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        if (s.isLoadingMore) {
+                                            CircularProgressIndicator()
+                                        } else {
+                                            OutlinedButton(
+                                                onClick = { viewModel.loadMore() },
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Text("Больше")
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -88,42 +107,68 @@ fun ContentScreen(
         }
     }
 }
+
 @Composable
-private fun LanguageCard(language: LanguageDto) {
+private fun CategoryCard(category: CategoryDto) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // id — в левом верхнем углу
-            Text(
-                text = "#${language.id}",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.align(Alignment.TopStart)
-            )
+            // Верхняя строка: id слева, количество слов справа
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "#${category.id}",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "${category.countOfWord} слов",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
-            // Центральный блок: flagCode + title
+            Spacer(Modifier.height(2.dp))
+
+            // Центральный блок: название + описание.
+            // Отдельный «контейнер», ограниченный по ширине карты,
+            // поэтому длинное название переносится на новую строку,
+            // не заезжая под id / количество слов.
             Column(
-                modifier = Modifier.align(Alignment.Center),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = language.flagCode.uppercase(),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold
+                    text = category.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    softWrap = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = language.title,
-                    style = MaterialTheme.typography.titleLarge
-                )
+                category.description?.takeIf { it.isNotBlank() }?.let { desc ->
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = desc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                        softWrap = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
