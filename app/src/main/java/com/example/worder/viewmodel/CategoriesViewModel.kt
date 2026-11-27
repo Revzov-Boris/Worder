@@ -41,8 +41,8 @@ class CategoriesViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = CategoryApiClient.categoryApi
-                    .getCategories(LANGUAGE_TITLE, page = 0, size = PAGE_SIZE)
-                nextPage = 1
+                    .getCategories(LANGUAGE_TITLE, page = nextPage, size = PAGE_SIZE)
+                nextPage++;
                 _state.value = CategoriesUiState.Success(
                     categories = response.content,
                     hasMore = !response.last,
@@ -75,7 +75,6 @@ class CategoriesViewModel : ViewModel() {
                     isLoadingMore = false
                 )
             } catch (e: Exception) {
-                // Возвращаем прежнее состояние + флаг, чтобы кнопка не пропала
                 _state.value = current.copy(isLoadingMore = false)
             }
         }

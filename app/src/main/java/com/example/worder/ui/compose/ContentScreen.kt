@@ -80,7 +80,7 @@ fun ContentScreen(
                                 CategoryCard(category)
                             }
 
-                            // Кнопка «Больше» — показываем только если есть ещё страницы
+                            // Кнопка Больше. показываем только если есть ещё страницы
                             if (s.hasMore) {
                                 item(key = "load_more") {
                                     Box(
@@ -140,10 +140,6 @@ private fun CategoryCard(category: CategoryDto) {
 
             Spacer(Modifier.height(2.dp))
 
-            // Центральный блок: название + описание.
-            // Отдельный «контейнер», ограниченный по ширине карты,
-            // поэтому длинное название переносится на новую строку,
-            // не заезжая под id / количество слов.
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
