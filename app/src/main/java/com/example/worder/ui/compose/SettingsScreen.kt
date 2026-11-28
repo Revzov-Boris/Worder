@@ -1,185 +1,171 @@
 package com.example.worder.ui.compose
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.DeleteForever
-import androidx.compose.material.icons.filled.Savings
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.worder.data.CategoriesFileInfo
+import com.example.worder.viewmodel.SettingsViewModel
+import java.text.DateFormat
+import java.util.Date
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onLogOutClick: () -> Unit,
-    onCloseClick: () -> Unit
+    onCloseClick: () -> Unit,
+    viewModel: SettingsViewModel = viewModel()
 ) {
-    var age by remember { mutableStateOf("") }
-    var selectedGender by remember { mutableStateOf<String?>(null) }
-    var selectedLanguage by remember { mutableStateOf<String?>(null) }
+    val settings by viewModel.settings.collectAsState()
+    val files by viewModel.files.collectAsState()
+    val busy by viewModel.busy.collectAsState()
+    val message by viewModel.message.collectAsState()
+    val snackbar = remember { SnackbarHostState() }
     var expanded by remember { mutableStateOf(false) }
+    var filenameDraft by remember { mutableStateOf(viewModel.fileName.removeSuffix(".txt")) }
+    var ageDraft by remember(settings?.age) { mutableStateOf(settings?.age?.toString().orEmpty()) }
 
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    LaunchedEffect(message) {
+        message?.let {
+            snackbar.showSnackbar(it)
+            viewModel.consumeMessage()
+        }
+    }
 
-    val languages = listOf("Английский", "Испанский", "Немецкий")
-
-    Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
-    ) { innerPadding ->
+    Scaffold(snackbarHost = { SnackbarHost(snackbar) }) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
+            Text("Настройки", style = MaterialTheme.typography.headlineMedium)
+            Text("DataStore: язык и тема. SharedPreferences: пол и возраст.",
+                style = MaterialTheme.typography.bodySmall)
 
-            Button(
-                onClick = {
-                    Log.d("SettingsScreen", "to content")
-               },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onSurface,
-                    contentColor = MaterialTheme.colorScheme.surface
-                )
-            ) {
-                Icon(Icons.Filled.Book, contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Назад к языкам")
-            }
-
-            Spacer(Modifier.height(12.dp))
-
-            Button(
-                onClick = {
-                    Log.d("SettingsScreen", "change theme")
-                    scope.launch {
-                        snackbarHostState.showSnackbar("Тема изменена")
+            if (settings == null) {
+                CircularProgressIndicator()
+            } else {
+                val current = settings!!
+                ExposedDropdownMenuBox(
+                    expanded = expanded,
+                    onExpandedChange = { expanded = !expanded }
+                ) {
+                    OutlinedTextField(
+                        value = current.language,
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("Изучаемый язык (DataStore)") },
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                        modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable).fillMaxWidth()
+                    )
+                    ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                        listOf("Английский", "Испанский", "Немецкий").forEach { value ->
+                            DropdownMenuItem(text = { Text(value) }, onClick = {
+                                viewModel.setLanguage(value)
+                                expanded = false
+                            })
+                        }
                     }
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onSurface,
-                    contentColor = MaterialTheme.colorScheme.surface
+                }
+
+                OutlinedButton(onClick = { viewModel.setDarkTheme(!current.darkTheme) }) {
+                    Icon(
+                        imageVector = if (current.darkTheme) Icons.Filled.DarkMode else Icons.Filled.LightMode,
+                        contentDescription = null
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (current.darkTheme) "Тёмная тема" else "Светлая тема")
+                }
+
+                OutlinedTextField(
+                    value = ageDraft,
+                    onValueChange = { value ->
+                        if (value.length <= 3 && value.all(Char::isDigit)) {
+                            ageDraft = value
+                            value.toIntOrNull()?.takeIf { it in 1..120 }?.let(viewModel::setAge)
+                        }
+                    },
+                    label = { Text("Возраст (SharedPreferences)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    supportingText = { Text("От 1 до 120 лет") },
+                    isError = ageDraft.toIntOrNull()?.let { it in 1..120 } != true,
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
                 )
-            ) {
-                Icon(Icons.Filled.DarkMode, contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Сменить тему")
+
+                Text("Пол (SharedPreferences)", style = MaterialTheme.typography.titleSmall)
+                listOf("M" to "Мужской", "F" to "Женский", "X" to "Не указан").forEach { (code, label) ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        RadioButton(selected = current.gender == code, onClick = { viewModel.setGender(code) })
+                        Text(label)
+                    }
+                }
             }
 
-            Spacer(Modifier.height(24.dp))
-
+            HorizontalDivider()
+            Text("Файл категорий", style = MaterialTheme.typography.titleLarge)
+            Text("Категории со всех страниц сохраняются в общедоступной папке Downloads.",
+                style = MaterialTheme.typography.bodySmall)
             OutlinedTextField(
-                value = age,
-                onValueChange = { new -> if (new.all { it.isDigit() }) age = new },
-                label = { Text("Возраст") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                value = filenameDraft,
+                onValueChange = { filenameDraft = it },
+                label = { Text("Имя файла без .txt (например, 12_categories)") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
-
-            Spacer(Modifier.height(16.dp))
-
-            Text("Пол", style = MaterialTheme.typography.labelLarge, modifier = Modifier.align(Alignment.Start))
-
-            listOf("M" to "Мужской", "F" to "Женский", "X" to "Не указан").forEach { (code, label) ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
-                ) {
-                    Checkbox(
-                        checked = selectedGender == code,
-                        onCheckedChange = { isChecked ->
-                            selectedGender = if (isChecked) code else null
-                            Log.d("SettingsScreen", "gender = $selectedGender")
-                        }
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Text(label)
-                }
-            }
-
-            Spacer(Modifier.height(16.dp))
-
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                OutlinedTextField(
-                    value = selectedLanguage ?: "",
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Изучаемый язык") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                        .fillMaxWidth()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    languages.forEach { lang ->
-                        DropdownMenuItem(
-                            text = { Text(lang) },
-                            onClick = {
-                                selectedLanguage = lang
-                                expanded = false
-                                Log.d("SettingsScreen", "language = $lang")
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(Modifier.height(24.dp))
-
             Button(
-                onClick = { Log.d("SettingsScreen", "make backup") },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.onPrimaryFixed,
-                    contentColor = MaterialTheme.colorScheme.background
-                )
-            ) {
-                Icon(Icons.Filled.Savings, contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Сделать бэкап")
+                onClick = { viewModel.updateFileName(filenameDraft) },
+                enabled = !busy && filenameDraft.isNotBlank()
+            ) { Text("Применить имя файла") }
+
+            if (busy) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            when (val publicFile = files?.publicFile) {
+                null -> Text("Внешний файл: отсутствует")
+                else -> FileDescription("Внешний файл", publicFile)
             }
-
-            Spacer(Modifier.height(12.dp))
-
+            when (val backup = files?.backup) {
+                null -> Text("Резервная копия: отсутствует")
+                else -> FileDescription("Резервная копия доступна", backup)
+            }
             Button(
-                onClick = {
-                    Log.d("SettingsScreen", "logout")
-                    onLogOutClick()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
-                )
-            ) {
-                Icon(Icons.Filled.DeleteForever, contentDescription = null)
-                Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Выйти из аккаунта")
+                onClick = viewModel::exportCategories,
+                enabled = !busy && files != null && files?.publicFile == null
+            ) { Text("Создать файл из категорий") }
+            Button(
+                onClick = viewModel::deleteFile,
+                enabled = !busy && files?.publicFile != null
+            ) { Text("Удалить файл (сохранить копию)") }
+            Button(
+                onClick = viewModel::restoreFile,
+                enabled = !busy && files?.backup != null && files?.publicFile == null
+            ) { Text("Восстановить из копии") }
+            OutlinedButton(onClick = viewModel::refreshFiles, enabled = !busy) {
+                Text("Обновить сведения о файлах")
             }
+            HorizontalDivider()
+            OutlinedButton(onClick = onCloseClick) { Text("Назад") }
+            Button(onClick = onLogOutClick) { Text("Выйти из аккаунта") }
         }
+    }
+}
+
+@Composable
+private fun FileDescription(title: String, file: CategoriesFileInfo) {
+    Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        Text(title, style = MaterialTheme.typography.titleMedium)
+        Text("Название: ${file.name}")
+        Text("Расположение: ${file.location}")
+        Text("Размер: ${file.bytes} байт")
+        Text("Дата: ${DateFormat.getDateTimeInstance().format(Date(file.created))}")
     }
 }

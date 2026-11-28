@@ -4,7 +4,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.worder.viewmodel.SettingsViewModel
+import com.example.worder.ui.theme.WorderTheme
 import androidx.compose.material3.Surface
 import com.example.worder.ui.compose.AppNavigation
 
@@ -13,7 +17,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.d("StartActivity", "onCreate")
         setContent {   // вместо setContentView(R.layout.activity_main)
-            MaterialTheme {
+            val settingsViewModel: SettingsViewModel = viewModel()
+            val settings by settingsViewModel.settings.collectAsState()
+            WorderTheme(darkTheme = settings?.darkTheme ?: false) {
                 Surface {
                     AppNavigation()
                 }

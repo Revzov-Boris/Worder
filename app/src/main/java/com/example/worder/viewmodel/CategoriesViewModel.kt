@@ -1,6 +1,11 @@
 package com.example.worder.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.example.worder.data.SettingsRepository
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import androidx.lifecycle.viewModelScope
 import com.example.worder.data.CategoryDto
 import com.example.worder.service.CategoryApiClient
@@ -19,10 +24,9 @@ sealed interface CategoriesUiState {
     data class Error(val message: String) : CategoriesUiState
 }
 
-class CategoriesViewModel : ViewModel() {
+class CategoriesViewModel(app: Application) : AndroidViewModel(app) {
 
     companion object {
-        private const val LANGUAGE_TITLE = "английский"
         private const val PAGE_SIZE = 3
     }
 
@@ -31,24 +35,41 @@ class CategoriesViewModel : ViewModel() {
     val state: StateFlow<CategoriesUiState> = _state.asStateFlow()
 
     private var nextPage = 0
+    private var currentLanguage = "Английский"
+    private var loadingJob: Job? = null
 
-    init { loadFirstPage() }
+    private val _language = MutableStateFlow(currentLanguage)
+    val language: StateFlow<String> = _language.asStateFlow()
+
+    init {
+        // Используем изучаемый язык, сохранённый через DataStore.
+        viewModelScope.launch {
+            SettingsRepository(app).settings.map { it.language }.distinctUntilChanged().collect { selected ->
+                currentLanguage = selected
+                _language.value = selected
+                loadFirstPage()
+            }
+        }
+    }
 
     /** Первая загрузка / повтор после ошибки. */
     fun loadFirstPage() {
         nextPage = 0
         _state.value = CategoriesUiState.Loading
-        viewModelScope.launch {
+        loadingJob?.cancel()
+        val requestedLanguage = currentLanguage
+        loadingJob = viewModelScope.launch {
             try {
                 val response = CategoryApiClient.categoryApi
-                    .getCategories(LANGUAGE_TITLE, page = nextPage, size = PAGE_SIZE)
-                nextPage++;
+                    .getCategories(requestedLanguage.lowercase(), page = 0, size = PAGE_SIZE)
+                nextPage = 1
                 _state.value = CategoriesUiState.Success(
                     categories = response.content,
                     hasMore = !response.last,
                     isLoadingMore = false
                 )
             } catch (e: Exception) {
+                if (e is kotlinx.coroutines.CancellationException) throw e
                 _state.value = CategoriesUiState.Error(e.message ?: "Ошибка сети")
             }
         }
@@ -65,7 +86,7 @@ class CategoriesViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = CategoryApiClient.categoryApi
-                    .getCategories(LANGUAGE_TITLE, page = nextPage, size = PAGE_SIZE)
+                    .getCategories(currentLanguage.lowercase(), page = nextPage, size = PAGE_SIZE)
                 nextPage++
 
                 val merged = current.categories + response.content
@@ -75,6 +96,7 @@ class CategoriesViewModel : ViewModel() {
                     isLoadingMore = false
                 )
             } catch (e: Exception) {
+                // Возвращаем прежнее состояние + флаг, чтобы кнопка не пропала
                 _state.value = current.copy(isLoadingMore = false)
             }
         }

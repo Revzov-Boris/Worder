@@ -1,6 +1,5 @@
 package com.example.worder.ui.compose
 
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,11 +27,12 @@ fun ContentScreen(
     viewModel: CategoriesViewModel = viewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val learningLanguage by viewModel.language.collectAsState()
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Категории слов") },
+                title = { Text("Категории: $learningLanguage") },
                 actions = {
                     IconButton(onClick = onSettingsClick) {
                         Icon(
@@ -115,57 +115,46 @@ private fun CategoryCard(category: CategoryDto) {
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Верхняя строка: id слева, количество слов справа
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "#${category.id}",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "${category.countOfWord} слов",
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
 
-            Spacer(Modifier.height(2.dp))
+            Text(
+                text = "#${category.id}",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.align(Alignment.TopStart)
+            )
 
+            // Центральный блок: название + описание
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp),
+                modifier = Modifier.align(Alignment.Center),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
                     text = category.name,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    softWrap = true,
-                    modifier = Modifier.fillMaxWidth()
+                    fontWeight = FontWeight.Bold
                 )
+                Spacer(Modifier.height(8.dp))
                 category.description?.takeIf { it.isNotBlank() }?.let { desc ->
-                    Spacer(Modifier.height(8.dp))
                     Text(
                         text = desc,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        softWrap = true,
-                        modifier = Modifier.fillMaxWidth()
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
+
+            // количество слов в правом верхнем углу
+            Text(
+                text = "${category.countOfWord} слов",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.align(Alignment.TopEnd)
+            )
         }
     }
 }
